@@ -3,11 +3,10 @@
 
 # outlierensembles
 
-<img src='man/figures/logo.png' align="right" height="138" />
+<!-- <img src='man/figures/logo.png' align="right" height="138" /> -->
 
 <!-- badges: start -->
-
-[![R-CMD-check](https://github.com/sevvandi/outlierensembles/workflows/R-CMD-check/badge.svg)](https://github.com/sevvandi/outlierensembles/actions)
+[![R-CMD-check](https://github.com/sevvandi/outlierensembles/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/sevvandi/outlierensembles/actions/workflows/R-CMD-check.yaml)
 <!-- badges: end -->
 
 **outlierensembles** provides a collection of outlier/anomaly detection
@@ -40,6 +39,13 @@ And the development version from [GitHub](https://github.com/) with:
 devtools::install_github("sevvandi/outlierensembles")
 ```
 
+Then load the libraries.
+
+``` r
+library(outlierensembles)
+library(ggplot2)
+```
+
 ## Example
 
 We use methods from dbscan R package as to find anomalies. You can use
@@ -48,23 +54,30 @@ construct the IRT ensemble. The colors show the ensemble scores.
 
 ``` r
 faithfulu <- scale(faithful)
-# Using different parameters of lof for anomaly detection
-y1 <- dbscan::lof(faithfulu, minPts = 5)
-y2 <- dbscan::lof(faithfulu, minPts = 10)
-y3 <- dbscan::lof(faithfulu, minPts = 20)
-knnobj <- dbscan::kNN(faithfulu, k = 20)
-# Using different KNN distances as anomaly scores
-y4 <- knnobj$dist[ ,5]
-y5 <- knnobj$dist[ ,10]
-y6 <- knnobj$dist[ ,20]
-# Dense points are less anomalous. Points in less dense areas are more anomalous. Hence 1 - pointdensity is used.
-y7 <- 1 - dbscan::pointdensity(faithfulu, eps = 1, type="gaussian")
-y8 <- 1 - dbscan::pointdensity(faithfulu, eps = 2, type = "gaussian")
-y9 <- 1 - dbscan::pointdensity(faithfulu, eps = 0.5, type = "gaussian")
+if (requireNamespace("dbscan", quietly = TRUE)){
+  
+  # Using different parameters of lof for anomaly detection
+  y1 <- dbscan::lof(faithfulu, minPts = 5)
+  y2 <- dbscan::lof(faithfulu, minPts = 10)
+  y3 <- dbscan::lof(faithfulu, minPts = 20)
+  knnobj <- dbscan::kNN(faithfulu, k = 20)
+  # Using different KNN distances as anomaly scores
+  y4 <- knnobj$dist[ ,5]
+  y5 <- knnobj$dist[ ,10]
+  y6 <- knnobj$dist[ ,20]
+  # Dense points are less anomalous. Points in less dense areas are more anomalous. Hence 1 - pointdensity is used.
+  y7 <- 1 - dbscan::pointdensity(faithfulu, eps = 1, type="gaussian")
+  y8 <- 1 - dbscan::pointdensity(faithfulu, eps = 2, type = "gaussian")
+  y9 <- 1 - dbscan::pointdensity(faithfulu, eps = 0.5, type = "gaussian")
+  
+  Yfaithful <- cbind.data.frame(y1, y2, y3, y4, y5, y6, y7, y8, y9)
+  
+}else{
+  # If dbscan is not installed, then load data from package
+  data(Yfaithful)
+}
 
-
-
-Y <- cbind.data.frame(y1, y2, y3, y4, y5, y6, y7, y8, y9)
+Y <- Yfaithful
 ens1 <- irt_ensemble(Y)
 #> Warning in sqrt(diag(solve(Hess))): NaNs produced
 df <- cbind.data.frame(faithful, ens1$scores)
@@ -131,7 +144,8 @@ ggplot(df, aes(eruptions, waiting)) + geom_point(aes(color=Average)) +  scale_co
 
 ## References
 
-<div id="refs" class="references csl-bib-body hanging-indent">
+<div id="refs" class="references csl-bib-body hanging-indent"
+entry-spacing="0">
 
 <div id="ref-Aggarwal2015" class="csl-entry">
 

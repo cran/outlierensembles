@@ -7,7 +7,6 @@ knitr::opts_chunk$set(
 ## ----setup--------------------------------------------------------------------
 library(outlierensembles)
 library(ggplot2)
-library(dbscan)
 
 ## ----dat----------------------------------------------------------------------
 set.seed(1)
@@ -34,20 +33,25 @@ ggplot(X, aes(x1, x2)) + geom_point()
 
 ## ----outliers1----------------------------------------------------------------
 # Using different parameters of lof for anomaly detection
-y1 <- dbscan::lof(X, minPts = 5)
-y2 <- dbscan::lof(X, minPts = 10)
-y3 <- dbscan::lof(X, minPts = 20)
-knnobj <- dbscan::kNN(X, k = 20)
-# Using different KNN distances as anomaly scores
-y4 <- knnobj$dist[ ,5]
-y5 <- knnobj$dist[ ,10]
-y6 <- knnobj$dist[ ,20]
-# Dense points are less anomalous. Points in less dense areas are more anomalous. Hence 1 - pointdensity is used.
-y7 <- 1 - dbscan::pointdensity(X, eps = 1, type="gaussian")
-y8 <- 1 - dbscan::pointdensity(X, eps = 2, type = "gaussian")
-y9 <- 1 - dbscan::pointdensity(X, eps = 0.5, type = "gaussian")
-
-Y <- cbind.data.frame(y1, y2, y3, y4, y5, y6, y7, y8, y9)
+if (requireNamespace("dbscan", quietly = TRUE)){
+  y1 <- dbscan::lof(X, minPts = 5)
+  y2 <- dbscan::lof(X, minPts = 10)
+  y3 <- dbscan::lof(X, minPts = 20)
+  knnobj <- dbscan::kNN(X, k = 20)
+  # Using different KNN distances as anomaly scores
+  y4 <- knnobj$dist[ ,5]
+  y5 <- knnobj$dist[ ,10]
+  y6 <- knnobj$dist[ ,20]
+  # Dense points are less anomalous. Points in less dense areas are more anomalous. Hence 1 - pointdensity is used.
+  y7 <- 1 - dbscan::pointdensity(X, eps = 1, type="gaussian")
+  y8 <- 1 - dbscan::pointdensity(X, eps = 2, type = "gaussian")
+  y9 <- 1 - dbscan::pointdensity(X, eps = 0.5, type = "gaussian")
+  
+  Y <- cbind.data.frame(y1, y2, y3, y4, y5, y6, y7, y8, y9)
+}else{
+  # If dbscan is not installed, then load data from package
+  data(Y)
+}
 ens1 <- irt_ensemble(Y)
 df <- cbind.data.frame(X, ens1$scores)
 colnames(df)[3] <- "IRT"
